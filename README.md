@@ -34,7 +34,7 @@ docker-compose up -d
 * **Port:** `5672` (AMQP)
 
 ## MongoDB (The Storage)
-* **Connection String:** `mongodb://localhost:27017/notifications_db`
+* **Connection String:** `mongodb://localhost:27017/notifications`
 * **Default Port:** `27017`
 
 ---

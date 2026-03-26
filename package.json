@@ -1,0 +1,26 @@
+{
+  "name": "tunehub-notifications-service",
+  "version": "1.0.0",
+  "description": "This is a microservice designed to handle real-time notifications for the **TuneHub** platform. It acts as a bridge between the Java Backend and the End-User, using a message-driven architecture.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/efratchanoch/tunehub-notifications-service.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/efratchanoch/tunehub-notifications-service/issues"
+  },
+  "homepage": "https://github.com/efratchanoch/tunehub-notifications-service#readme",
+  "dependencies": {
+    "amqplib": "^0.10.9",
+    "express": "^5.2.1",
+    "mongoose": "^9.3.3",
+    "socket.io": "^4.8.3"
+  }
+}
