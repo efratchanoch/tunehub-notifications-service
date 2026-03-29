@@ -1,59 +1,41 @@
-import express, { json } from 'express';
-import { createServer } from 'http';
+import express from 'express';
+import http from 'http';
 import { Server } from 'socket.io';
-import connectDB from './src/config/db';
-import socketHandler from './src/socket/socketHandler';
-require('dotenv').config();
+import connectDB from './src/config/db.js';
+import socketHandler from './src/socket/socketHandler.js';
+import { startConsumer } from './src/messaging/notificationConsumer.js';
+import dotenv from 'dotenv';
 
-// Initialize Express application
+dotenv.config();
+
 const app = express();
-
-// Create HTTP server to support both Express and Socket.io
-const server = createServer(app);
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-/**
- * Initialize core infrastructure components
- */
-connectDB(); // Establishes MongoDB connection
+// Database Connection
+connectDB();
 
-// Global Middleware
-app.use(json()); // Parses incoming JSON payloads
+// Middleware
+app.use(express.json());
 
-/**
- * WebSocket Server Configuration
- * Allows cross-origin requests for frontend integration
- */
+// Socket.io Initialization
 const io = new Server(server, {
-  cors: { 
-    origin: "*", 
-    methods: ["GET", "POST"] 
-  }
+  cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Attach Socket events handling logic
+// Activate Socket Handler
 socketHandler(io);
 
-/**
- * Messaging Infrastructure
- * Starts the RabbitMQ consumer to process background tasks
- */
-import './src/messaging/notificationConsumer';
+// Start RabbitMQ Consumer and inject the Socket.io instance
+startConsumer(io);
 
-/**
- * Health Check Route
- * Used for service monitoring and availability verification
- */
+// Health Check Endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'TuneHub-Notifications' });
 });
 
-/**
- * Start the Server
- */
 server.listen(PORT, () => {
-  console.log(`🚀 Notification Server running on port ${PORT}`);
+  console.log(`Notification Server running on port ${PORT}`);
 });
 
-// Export objects for potential testing or shared use
-export default { app, io };
+export { app, io, server };
