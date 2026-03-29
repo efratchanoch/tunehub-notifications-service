@@ -46,10 +46,15 @@ async function startConsumer(io) {
            * We use nack with requeue: true only for transient errors.
            */
           console.error("Error processing message:", error.message);
-          
-          // If it's a syntax error in JSON, don't requeue (it will never be valid)
+          const isValidationError = error.name === 'ValidationError';
           const isJsonError = error instanceof SyntaxError;
-          channel.nack(msg, false, !isJsonError); 
+        
+          if (isValidationError || isJsonError) {
+            console.error(`[Fatal Error] Skipping invalid message: ${error.message}`);
+            channel.ack(msg); 
+          } else {
+            channel.nack(msg, false, true); 
+          }
         }
       }
     });
@@ -64,6 +69,8 @@ async function startConsumer(io) {
     console.error("Consumer connection failed:", error);
     // Retry connection after a delay
     setTimeout(() => startConsumer(io), 5000); 
+
+   
   }
 }
 

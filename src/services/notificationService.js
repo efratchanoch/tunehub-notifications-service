@@ -3,7 +3,13 @@ import Notification from '../models/Notification.js';
 /**
  * List of notification types that should be aggregated (stacked) instead of creating new entries.
  */
-const STACKABLE_TYPES = ['LIKE', 'FAVORITE'];
+const STACKABLE_TYPES = [
+    'LIKE_POST', 
+    'LIKE_COMMENT', 
+    'LIKE_SHEET_MUSIC', 
+    'FAVORITE_POST', 
+    'FAVORITE_SHEET_MUSIC'
+];
 
 /**
  * Service to handle notification logic: Persisting to MongoDB and real-time broadcasting via Socket.io.
