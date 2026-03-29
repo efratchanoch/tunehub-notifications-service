@@ -5,6 +5,7 @@ import connectDB from './src/config/db.js';
 import socketHandler from './src/socket/socketHandler.js';
 import { startConsumer } from './src/messaging/notificationConsumer.js';
 import dotenv from 'dotenv';
+import notificationRoutes from './src/routes/notificationRoutes.js';
 
 dotenv.config();
 
@@ -37,5 +38,8 @@ app.get('/health', (req, res) => {
 server.listen(PORT, () => {
   console.log(`Notification Server running on port ${PORT}`);
 });
+
+// API Routes
+app.use('/api/notifications', notificationRoutes);
 
 export { app, io, server };
