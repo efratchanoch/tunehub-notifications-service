@@ -8,8 +8,9 @@ const socketHandler = (io) => {
 
     if (userId) {
       // Join a room named after the userId to enable targeted broadcasting
-      socket.join(userId);
-      console.log(`User [${userId}] connected with socket [${socket.id}]`);
+      const roomName = `user_${userId}`;
+        socket.join(roomName);
+        console.log(`Socket ${socket.id} joined room: ${roomName}`);
     }
 
     socket.on('disconnect', () => {

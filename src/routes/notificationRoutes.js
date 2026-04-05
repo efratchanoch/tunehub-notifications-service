@@ -2,10 +2,17 @@ import express from 'express';
 import { 
     getUserNotifications, 
     markAsRead, 
-    markAllAsRead 
+    markAllAsRead,
+    getUnreadNotificationsCount
 } from '../controllers/notificationController.js';
 
 const router = express.Router();
+
+/**
+ * @route   GET /api/notifications/unread-count/:userId
+ * @desc    Get the count of unread notifications for a specific user
+ */
+router.get('/unread-count/:userId', getUnreadNotificationsCount);
 
 /**
  * @route   GET /api/notifications/:userId

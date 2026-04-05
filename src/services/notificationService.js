@@ -53,7 +53,7 @@ const handleIncomingNotification = async (data, io) => {
             if (notification && notification.counter <= 0) {
                 await Notification.deleteOne({ _id: notification._id });
                 if (io) {
-                    io.to(recipientId).emit('delete_notification', notification._id);
+                    io.to(`user_${recipientId}`).emit('delete_notification', notification._id);
                 }
                 console.log(`Notification [${type}] removed for user: ${recipientId} (Counter reached 0)`);
                 return;
@@ -75,7 +75,7 @@ const handleIncomingNotification = async (data, io) => {
 
         // Emit notification to the specific user's socket room
         if (io && notification) {
-            io.to(recipientId).emit('new_notification', notification);
+            io.to(`user_${recipientId}`).emit('new_notification', notification);
         }
 
     } catch (error) {

@@ -30,9 +30,9 @@ async function startConsumer(io) {
           console.log("Received task from queue:", data.type);
 
           // Verify that mandatory fields are present before processing
-          if (!data.recipientId || !data.type || !data.content) {
-            console.error("[Validation Failed] Missing required fields. Skipping message.");
-            return channel.ack(msg); // Remove malformed message from queue to prevent infinite loop
+          if (!data.recipientId || !data.type || !data.message) { 
+            console.error("[Validation Failed] Missing required fields. Check if it's 'message' or 'content'.");
+            return channel.ack(msg);
           }
           
           // Delegate the validated data to the business logic service

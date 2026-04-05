@@ -1,45 +1,76 @@
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+import cors from 'cors';
+
+// Custom Imports
 import connectDB from './src/config/db.js';
 import socketHandler from './src/socket/socketHandler.js';
-import { startConsumer } from './src/messaging/notificationConsumer.js';
-import dotenv from 'dotenv';
+import {startConsumer} from './src/messaging/notificationConsumer.js';
 import notificationRoutes from './src/routes/notificationRoutes.js';
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Database Connection
+/**
+ * Database Connection
+ */
 connectDB();
 
-// Middleware
-app.use(express.json());
+/**
+ * Global Middleware
+ */
+app.use(cors()); // Enable CORS for all requests
+app.use(express.json()); // Parse JSON bodies
 
-// Socket.io Initialization
+
+/**
+ * @description Server-side Socket.io initialization with CORS policy.
+ */
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] }
+  cors: {
+    origin: "http://localhost:4200", // The URL of your Angular app
+    methods: ["GET", "POST", "PATCH"],
+    credentials: true
+  }
 });
 
-// Activate Socket Handler
+// Initialize Socket event listeners
 socketHandler(io);
 
-// Start RabbitMQ Consumer and inject the Socket.io instance
-startConsumer(io);
-
-// Health Check Endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', service: 'TuneHub-Notifications' });
-});
-
-server.listen(PORT, () => {
-  console.log(`Notification Server running on port ${PORT}`);
-});
-
-// API Routes
+/**
+ * API Routes
+ */
 app.use('/api/notifications', notificationRoutes);
 
+/**
+ * Health Check Endpoint
+ */
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'UP', 
+    service: 'TuneHub-Notifications',
+    timestamp: new Date()
+  });
+});
+
+/**
+ * Background Services
+ * Start RabbitMQ Consumer and inject the Socket.io instance for real-time delivery
+ */
+startConsumer(io);
+
+/**
+ * Server Activation
+ */
+server.listen(PORT, () => {
+  console.log(`[Notification-Service] Running on port ${PORT}`);
+});
+
+// Export instances for testing or external use
 export { app, io, server };
