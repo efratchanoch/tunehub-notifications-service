@@ -19,7 +19,7 @@ const NotificationSchema = new Schema({
             'LIKE_POST', 'LIKE_COMMENT', 'LIKE_SHEET_MUSIC', 
             'FAVORITE_POST', 'FAVORITE_SHEET_MUSIC',
             'COMMENT_ON_POST', 'FOLLOW_REQUEST_RECEIVED', 
-            'FOLLOW_REQUEST_ACCEPTED', 'FOLLOW_REQUEST_DECLINED',
+            'FOLLOW_REQUEST_STATUS_UPDATE',
             'ADMIN_WARNING', 'ADMIN_PROMOTION'
         ] 
     },
