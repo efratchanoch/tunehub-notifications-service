@@ -20,7 +20,9 @@ const NotificationSchema = new Schema({
             'FAVORITE_POST', 'FAVORITE_SHEET_MUSIC',
             'COMMENT_ON_POST', 'FOLLOW_REQUEST_RECEIVED', 
             'FOLLOW_REQUEST_STATUS_UPDATE',
-            'ADMIN_WARNING', 'ADMIN_PROMOTION'
+            'ADMIN_WARNING', 'ADMIN_PROMOTION',
+            'NEW_POST_FROM_FOLLOWING',
+            'NEW_SHEET_MUSIC_FROM_FOLLOWING'
         ] 
     },
     
