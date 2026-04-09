@@ -34,8 +34,8 @@ app.use(express.json()); // Parse JSON bodies
  */
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:4200", // The URL of your Angular app
-    methods: ["GET", "POST", "PATCH"],
+    origin: "http://localhost:4200", // The URL of Angular app
+    methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
   }
 });

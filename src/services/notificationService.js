@@ -19,68 +19,37 @@ const STACKABLE_TYPES = [
  */
 const handleIncomingNotification = async (data, io) => {
     try {
-        const { recipientId, type, entityId, content, link, senderId, action } = data;
-        let notification;
+        const { recipientId, type, targetType, entityId, content, senderId, currentCount } = data;
 
-        if (STACKABLE_TYPES.includes(type)) {
-            // Determine the numeric change based on the action provided (default to increment)
-            const change = action === 'decrement' ? -1 : 1;
+        const query = { recipientId, entityId, type };
 
-            // Upsert Logic: Update existing unread notification or create a new one
-            notification = await Notification.findOneAndUpdate(
-                { 
-                    recipientId, 
-                    type, 
-                    entityId, 
-                    isRead: false 
-                },
-                { 
-                    $inc: { counter: change }, 
-                    $set: { 
-                        content, 
-                        link, 
-                        senderId, 
-                        updatedAt: new Date() 
-                    } 
-                },
-                { 
-                    upsert: true, 
-                    returnDocument: 'after' 
-                }
-            );
-
-            // If the counter reaches zero or less, delete the notification and inform the client
-            if (notification && notification.counter <= 0) {
-                await Notification.deleteOne({ _id: notification._id });
-                if (io) {
-                    io.to(`user_${recipientId}`).emit('delete_notification', notification._id);
-                }
-                console.log(`Notification [${type}] removed for user: ${recipientId} (Counter reached 0)`);
-                return;
+        const update = { 
+            $set: { 
+                content, 
+                senderId, 
+                targetType, 
+                counter: currentCount, 
+                isRead: false, 
+                createdAt: new Date()
             }
-        } else {
-            // Logic for non-stackable notifications: Always create a new record
-            notification = await Notification.create({
-                recipientId,
-                type,
-                entityId,
-                content,
-                link,
-                senderId,
-                counter: 1
-            });
-        }
+        };
 
-        console.log(`Notification processed [${type}] for user: ${recipientId} | Action: ${action || 'increment'}`);
+        const notification = await Notification.findOneAndUpdate(query, update, { 
+            upsert: true, 
+            new: true 
+        });
 
-        // Emit notification to the specific user's socket room
         if (io && notification) {
             io.to(`user_${recipientId}`).emit('new_notification', notification);
-        }
 
+            const unreadCount = await Notification.countDocuments({ 
+                recipientId, 
+                isRead: false 
+            });
+            io.to(`user_${recipientId}`).emit('unread_count_update', unreadCount);
+        }
     } catch (error) {
-        console.error('Service Error - handleIncomingNotification:', error);
-        throw error; 
+        console.error('Notification Service Error:', error);
     }
 };
 

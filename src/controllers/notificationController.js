@@ -43,30 +43,6 @@ export const getUserNotifications = async (req, res) => {
     }
 };
 
-/**
- * @route   PATCH /api/notifications/:id/read
- * @description Updates isRead status to true for a single notification.
- */
-export const markAsRead = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const notification = await Notification.findByIdAndUpdate(
-            id,
-            { isRead: true },
-            { new: true }
-        );
-
-        if (!notification) {
-            return res.status(404).json({ success: false, message: 'Notification not found' });
-        }
-
-        return res.status(200).json({ success: true, data: notification });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: 'Server Error' });
-    }
-};
-
 
 /**
  * Marks all unread notifications as read for a specific user.
@@ -107,6 +83,92 @@ export const getUnreadNotificationsCount = async (req, res) => {
         });
     } catch (error) {
         console.error(`[Error] Fetching unread count for ${req.params.userId}:`, error.message);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Internal Server Error' 
+        });
+    }
+};
+
+/**
+ * @route PATCH /api/notifications/:id/toggle-read
+ * @description Toggles the 'isRead' status using MongoDB _id
+ */
+export const toggleReadStatus = async (req, res) => {
+    try {
+        const { id } = req.params; 
+
+        const notification = await Notification.findById(id);
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        notification.isRead = !notification.isRead;
+        await notification.save();
+
+        res.status(200).json(notification);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+
+/**
+ * Deletes a notification from the database and notifies the client via Socket.io.
+ * * This method handles two scenarios:
+ * 1. Internal/Automatic Deletion: Triggered when the notification counter reaches zero.
+ * 2. Manual Deletion: Triggered by a standard DELETE request using the notification ID.
+ * * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} Sends a 200 OK status on success or 500 on server error.
+ */
+export const deleteNotification = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        /**
+         * Scenario 1: Logic for auto-deletion based on counter.
+         * Note: Ensure 'notification' and 'recipientId' are defined in the scope 
+         * if this is called internally.
+         */
+        if (typeof notification !== 'undefined' && notification.counter <= 0) {
+            const deletedId = notification._id;
+            await Notification.deleteOne({ _id: deletedId });
+            
+            if (notification.counter <= 0) {
+                const deletedId = notification._id.toString(); 
+                const recipientId = notification.recipientId.toString();
+            
+                await Notification.deleteOne({ _id: notification._id });
+            
+                if (global.io) {
+                    console.log(`Emitting delete to user_${recipientId} for ID: ${deletedId}`);
+                    global.io.to(`user_${recipientId}`).emit('delete_notification', deletedId);
+                }
+            }
+            return;
+        }
+
+        /**
+         * Scenario 2: Standard manual deletion via API.
+         */
+        const result = await Notification.findByIdAndDelete(id);
+
+        if (!result) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Notification not found' 
+            });
+        }
+
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Notification successfully deleted' 
+        });
+
+    } catch (error) {
+        console.error(`[Delete Error] ID ${req.params.id}:`, error.message);
         return res.status(500).json({ 
             success: false, 
             message: 'Internal Server Error' 

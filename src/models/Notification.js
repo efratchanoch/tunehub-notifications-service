@@ -4,6 +4,7 @@ import { Schema, model } from 'mongoose';
  * Defines the structure of a notification document in MongoDB.
  */
 const NotificationSchema = new Schema({
+    title: {type:String},
     // The user who receives the notification
     recipientId: { type: String, required: true, index: true }, 
     
@@ -23,6 +24,8 @@ const NotificationSchema = new Schema({
         ] 
     },
     
+    targetType: { type: String, required: true },
+
     // ID of the related object (Post ID, Comment ID, etc.)
     entityId: { type: String }, 
     
@@ -34,18 +37,19 @@ const NotificationSchema = new Schema({
     
     // Track if the user has viewed the notification
     isRead: { type: Boolean, default: false },
-    
-    // Redirection path for frontend navigation
-    link: { type: String }
+
+    createdAt: { type: Date, default: Date.now }
 }, { 
     // Automatically adds and manages createdAt and updatedAt fields
-    timestamps: true 
+    timestamps: false
 });
 
 /**
  * Compound index to optimize fetching the latest notifications for a specific user.
  * Sorting: recipientId (ASC), createdAt (DESC)
  */
+NotificationSchema.index({ recipientId: 1, entityId: 1, type: 1, targetType: 1 });
+
 NotificationSchema.index({ recipientId: 1, createdAt: -1 });
 
 export default model('Notification', NotificationSchema);
